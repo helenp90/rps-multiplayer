@@ -21,7 +21,7 @@ var turn = 1;
 //
 
 //Get a reference to the database service
-var database = firebase.database();
+// var database = firebase.database();
 
 //Attach a listener to the database /players/
 database.ref("/players/").on("value", function (snapshot) {
@@ -100,8 +100,113 @@ database.ref("/players/").on("value", function (snapshot) {
 		$("#waitingNotice").html("");
 	}
 
+// Button events
+
+// Add an event handler to the "submit" button to add a new user to the database
+
+$("#add-name").on("click", function (event) {
+	event.preventDefault();
+
+	//Prove that the name field is not empty are we are waiting for a player
+	if (($ = ("name-input").val().trim() !== "" && !(player1 && player2)) => {
+
+			//Add player 1
+			if (player1 === null) {
+				console.log("Adding Player 1");
+
+				youPlayerName = $("#name-input").val().trim();
+				player1 = {
+					name: youPlayerName,
+					win: 0,
+					loss: 0,
+					tie: 0,
+					choice: ""
+				};
+
+				//Add player1 to the database
+				database.ref().child("/players/player1").set(player1);
+
+				//Set turn value to 1 as player1 goes first
+				database.ref().child("/turn").set(1);
+
+				//If the user disconnects by closing/ refreshing the browser remove the user from the db
+				database.ref("/players/player1").onDisconnect().remove();
+			} else if ((player1 !== null) && (player2 === null)) {
+
+				//adding player 2
+				console.log("Adding Player 2");
+
+				youPlayerName = $("#name-input").val().trim();
+				player2 = {
+					name: youPlayerName,
+					win: 0,
+					loss: 0,
+					tie: 0,
+					choice: ""
+				};
+
+				// Add player2 to the database
+				database.ref().chiild("/players/player2").set(player2);
+
+				//If the user disconnects by closing or refreshing the browser, remove the user from the database
+				database.ref("/players/player2").onDisconnect().remove();
+
+			}
 
 
+			// Add a user joining message to the chat
 
-;
+			var msg = yourPlayerName + " has joined!";
+			console.log(msg);
+
+			//Get a key for the join chat entry
+			var chatKey = database.ref().child("/chat/").push().key;
+
+			//Save the join chat entry
+			database.ref("/chat/" + chatKey).set(msg);
+
+			// Reset the name input box
+			$("#name-input").val("");
+
+		});
 });
+// Monitor Player1's selection
+
+$("#playerPlanel1").on("click", ".panelOption", function (event) {
+	event.preventDefault();
+
+	//Make selections only when both players are in the game
+	if (player1 && player2 && (yourPlayerName === player1.name) && (turn === 1)) {
+
+		//record player1s choice
+		var choice = $(this).text().trim();
+
+		//record the players choice in the db
+		player1choice = choice;
+		database.ref().child("/players/player1/choice").set(choice);
+
+		// Set the turn value to 2 as it's now player 2's turn
+		turn = 2;
+		database.ref().child("/turn").set(2);
+	}
+
+});
+//Monitor Player2's selection
+$("#playerPlanel2").on("click", ".panelOption", function (event) {
+	event.preventDefault();
+
+	//Make selections only when both players are in the game
+	if (player1 && player2 && (yourPlayerName === player2.name) && (turn === 1)) {
+
+		//record player1s choice
+		var choice = $(this).text().trim();
+
+		//record the players choice in the db
+		player2choice = choice;
+		database.ref().child("/players/player2/choice").set(choice);
+
+		// Compare
+		rpsCompare();
+	}
+});
+
